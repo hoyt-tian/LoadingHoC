@@ -1,0 +1,43 @@
+{
+  "name": "loading-hoc",
+  "version": "0.0.1",
+  "description": "loading hoc for react",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "files": [
+    "dist",
+    "lib",
+    "es"
+  ],
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "doc": "typedoc --mode modules --tsconfig tsconfig.json --out ./docs ./src",
+    "build": "tsc --build tsconfig.json",
+    "lint": "tslint --project ./tsconfig.json",
+    "lint:fix": "tslint -c tslint.json --fix --project ./tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hoyt-tian/LoadingHoC.git"
+  },
+  "keywords": [
+    "loading",
+    "hoc"
+  ],
+  "author": "hao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hoyt-tian/LoadingHoC/issues"
+  },
+  "homepage": "https://github.com/hoyt-tian/LoadingHoC#readme",
+  "peerDependencies": {
+    "react": ">=15.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^15.0.0",
+    "tslint": "^5.18.0",
+    "typedoc": "^0.15.0",
+    "typescript": "^3.5.3"
+  }
+}
