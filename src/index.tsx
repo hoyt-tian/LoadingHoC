@@ -16,9 +16,9 @@ type PromiseFunc = (promises?: Promises) => Promises;
 
 type OptionalIndexed<T> = { [ key: string ]: T | undefined };
 
-const renderLoading = () => <div className="am-loading-text">数据加载中...</div>;
+const renderLoading = () => <div>数据加载中...</div>;
 
-const renderFail = () => <div className="am-page-refresh" onClick={() => window.location.reload()}>刷新</div>;
+const renderFail = () => <div onClick={() => window.location.reload()}>刷新</div>;
 
 const Defaults: ILoadingConfig = {
   fetchDataCallback: "componentDidFetch",
@@ -28,7 +28,7 @@ const Defaults: ILoadingConfig = {
   timeout: 15000,
 };
 
-type ILoadingHOCFactory = (WrapperComponent: ComponentClass, conf: ILoadingConfig) => ComponentClass;
+type ILoadingHOCFactory = (WrapperComponent: ComponentClass, conf: object| ILoadingConfig) => ComponentClass;
 interface ILoadingState extends Readonly<ComponentState> {
   __loading__: string
 }
@@ -36,20 +36,24 @@ interface ILoadingState extends Readonly<ComponentState> {
 /*
  * Loading的通用组件
  */
-const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, conf = Defaults) => {
+const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
+  const conf = {
+    ...Defaults,
+    ...config,
+  };
   class LoadingHOCComponent extends WrapperComponent {
     constructor(props?: any, context?: any) {
       super(props, context);
       this.state = {
-        loading: "loading",
+        __loading__: "loading",
       };
       this.reload();
     }
 
     public render(): RenderResult {
       const {
-        renderFail: fail = Defaults.renderFail,
-        renderLoading: loading = Defaults.renderLoading,
+        renderFail: fail,
+        renderLoading: loading,
       } = conf;
       const { state } = this;
       const { __loading__ } = state as ILoadingState;
@@ -72,10 +76,11 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, conf = Defaults) => {
           throw new Error(`${WrapperComponent.name} does not has fetch data function ${conf.fetchDataFunc}`);
         }
         const ps = fetchDataFunc();
-        const didFetch = (this as unknown as OptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
+        let didFetch = (this as unknown as OptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
+        didFetch = didFetch && didFetch.bind(this);
         return this.fetchData(ps).then((result: Promises) => {
           if (didFetch) {
-            return didFetch.call(this, result).then(() => super.setState({
+            return didFetch(result).then(() => this.setState({
               __loading__: "done",
             }, () => {
               if (didFetch) {
@@ -84,7 +89,7 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, conf = Defaults) => {
               return Promise.resolve();
             }));
           }
-          const props = super.props as OptionalIndexed<PromiseFunc>;
+          const props = this.props as OptionalIndexed<PromiseFunc>;
           const callback = props[conf.fetchDataCallback];
           if (callback) {
             return callback(result);

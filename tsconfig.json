@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "strictNullChecks": true,
-    "module": "esnext",
+    "module": "commonjs",
     "experimentalDecorators": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
@@ -9,7 +9,7 @@
     "outDir": "lib",
     "lib": ["dom", "es2017"],
     "strict": true,
-    "target": "es6",
+    "target": "es5",
     "sourceMap": true,
     "jsx": "react",
     "esModuleInterop": true,
