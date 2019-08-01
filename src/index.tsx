@@ -14,7 +14,7 @@ type Promises = Promise<any> | Array<Promise<any>>;
 
 type PromiseFunc = (promises?: Promises) => Promises;
 
-type OptionalIndexed<T> = { [ key: string ]: T | undefined };
+interface IOptionalIndexed<T> { [ key: string ]: T | undefined; }
 
 const renderLoading = () => <div>数据加载中...</div>;
 
@@ -69,20 +69,20 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
 
     public reload() {
       try {
-        const athis = this as unknown as OptionalIndexed<PromiseFunc>;
+        const athis = this as unknown as IOptionalIndexed<PromiseFunc>;
         const fetchDataFunc = athis[conf.fetchDataFunc];
         if (!fetchDataFunc) {
           throw new Error(`${WrapperComponent.name} does not has fetch data function ${conf.fetchDataFunc}`);
         }
         const ps = fetchDataFunc();
-        let didFetch = (this as unknown as OptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
+        let didFetch = (this as unknown as IOptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
         didFetch = didFetch && didFetch.bind(this);
         return this.fetchData(ps).then((result: Promises) => {
           if (didFetch) {
-            return didFetch(result).then(() => this.setState({ [$StateKey]: "done" }, 
-            () => didFetch ? didFetch(result) :Promise.resolve()));
+            return didFetch(result).then(() => this.setState({ [$StateKey]: "done" },
+            () => didFetch ? didFetch(result) : Promise.resolve()));
           }
-          const props = this.props as OptionalIndexed<PromiseFunc>;
+          const props = this.props as IOptionalIndexed<PromiseFunc>;
           const callback = props[conf.fetchDataCallback];
           return callback ? callback(result) : Promise.resolve();
         });
@@ -91,12 +91,12 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
       }
     }
 
-    private fetchData(promises: Promises = []){
+    private fetchData(promises: Promises = []) {
       const promise = promises instanceof Array ? Promise.all(promises) : promises;
-      return Promise.race([ promise, new Promise((_resolve, reject) => {
+      return Promise.race([ promise, new Promise((resolve, reject) => {
         const { timeout = 5000 } = conf;
         setTimeout(() => reject(new Error("请求超时")), timeout);
-      }) ]).then((ps: Promises) => ps, (fail: () => any) => new Promise((_r, j) => this.setState({
+      }) ]).then((ps: Promises) => ps, (fail: () => any) => new Promise((r, j) => this.setState({
           [$StateKey]: "fail",
         }, () => j(fail))));
     }
