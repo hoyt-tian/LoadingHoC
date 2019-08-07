@@ -76,7 +76,7 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
         if (!fetchDataFunc) {
           throw new Error(`${WrapperComponent.name} does not has fetch data function ${conf.fetchDataFunc}`);
         }
-        const ps = fetchDataFunc();
+        const ps = fetchDataFunc.call(this);
         let didFetch = (this as unknown as IOptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
         didFetch = didFetch && didFetch.bind(this);
         return this.fetchData(ps).then((result: Promises) => {
