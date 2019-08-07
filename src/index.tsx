@@ -43,9 +43,9 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
   class LoadingHOCComponent extends WrapperComponent {
     constructor(props?: any, context?: any) {
       super(props, context);
-      this.state = {
+      this.setState({
         [$StateKey]: "loading",
-      };
+      });
       this.reload();
     }
 
@@ -93,10 +93,10 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
 
     private fetchData(promises: Promises = []) {
       const promise = promises instanceof Array ? Promise.all(promises) : promises;
-      return Promise.race([ promise, new Promise((resolve, reject) => {
+      return Promise.race([ promise, new Promise((_resolve, reject) => {
         const { timeout = 5000 } = conf;
         setTimeout(() => reject(new Error("请求超时")), timeout);
-      }) ]).then((ps: Promises) => ps, (fail: () => any) => new Promise((r, j) => this.setState({
+      }) ]).then((ps: Promises) => ps, (fail: () => any) => new Promise((_r, j) => this.setState({
           [$StateKey]: "fail",
         }, () => j(fail))));
     }
