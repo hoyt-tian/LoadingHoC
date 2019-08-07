@@ -1,6 +1,6 @@
 {
   "name": "loading-hoc",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "loading hoc for react",
   "main": "lib/index.js",
   "files": [

@@ -43,9 +43,11 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
   class LoadingHOCComponent extends WrapperComponent {
     constructor(props?: any, context?: any) {
       super(props, context);
-      this.setState({
-        [$StateKey]: "loading",
-      });
+      const { state = {} } = this;
+      this.state = {
+        ...state,
+        $StateKey: "loading",
+      };
       this.reload();
     }
 
