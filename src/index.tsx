@@ -80,12 +80,13 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
         let didFetch = (this as unknown as IOptionalIndexed<(ps: Promises) => Promise<any>>)[conf.fetchDataCallback];
         didFetch = didFetch && didFetch.bind(this);
         return this.fetchData(ps).then((result: Promises) => {
-          if (didFetch) {
-            return didFetch(result).then(() => this.setState({ [$StateKey]: "done" },
-            () => didFetch ? didFetch(result) : Promise.resolve()));
-          }
           const props = this.props as IOptionalIndexed<PromiseFunc>;
           const callback = props[conf.fetchDataCallback];
+          if (didFetch) {
+            return didFetch(result)
+              .then(() => new Promise((resovle) => this.setState({ [$StateKey]: "done" }, resovle)))
+              .then(() => callback ? callback(result) : Promise.resolve());
+          }
           return callback ? callback(result) : Promise.resolve();
         });
       } catch (e) {
