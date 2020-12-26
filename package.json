@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "doc": "typedoc --mode modules --tsconfig tsconfig.json --out ./docs ./src",
-    "build": "tnpm run lint:fix && tsc --build tsconfig.json",
+    "build": "npm run lint:fix && tsc --build tsconfig.json",
     "lint": "tslint --project ./tsconfig.json",
     "lint:fix": "tslint -c tslint.json --fix --project ./tsconfig.json"
   },
