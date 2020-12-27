@@ -2,10 +2,14 @@ import React, { ComponentClass } from "react";
 
 type RenderResult = JSX.Element | false | null;
 
+type reloadFunc = () => Promise<any>;
+
+type renderFailFunc = (reload: reloadFunc) => RenderResult;
+
 interface ILoadingConfig {
   fetchDataFunc: string;
   fetchDataCallback: string;
-  renderFail: () => RenderResult;
+  renderFail: renderFailFunc;
   renderLoading: () => RenderResult;
   timeout: number;
 }
@@ -18,7 +22,7 @@ interface IOptionalIndexed<T> { [ key: string ]: T | undefined; }
 
 const renderLoading = () => <div>数据加载中...</div>;
 
-const renderFail = () => <div onClick={() => window.location.reload()}>刷新</div>;
+const renderFail: renderFailFunc = (reload) => <div onClick={() => reload()}>刷新</div>;
 
 const Defaults: ILoadingConfig = {
   fetchDataCallback: "componentDidFetch",
@@ -28,19 +32,24 @@ const Defaults: ILoadingConfig = {
   timeout: 5000,
 };
 
-type ILoadingHOCFactory = (WrapperComponent: ComponentClass, conf: object| ILoadingConfig) => ComponentClass;
+export interface ILoadingHOCComponent {
+  reload(): Promise<any>;
+  componentDidFetch?(): Promises;
+  componentFetchData?(): (promises: Promises) => Promise<any>;
+}
 
 const $StateKey = `@loading-hoc/$K-${Math.random().toString(36).substring(2)}`;
 
 /*
  * Loading的通用组件
  */
-const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
+export default function LoadingHOC<T>(WrapperComponent: ComponentClass<T>, config = {}) {
   const conf = {
     ...Defaults,
     ...config,
   };
-  class LoadingHOCComponent extends WrapperComponent {
+  return class extends WrapperComponent implements ILoadingHOCComponent {
+
     constructor(props?: any, context?: any) {
       super(props, context);
       const { state = {} } = this;
@@ -60,7 +69,7 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
       const $State = state as any;
       switch ($State[$StateKey]) {
         case "fail":
-          return fail();
+          return fail(this.reload);
         case "done":
           return super.render();
         case "loading":
@@ -69,7 +78,7 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
       }
     }
 
-    public reload() {
+    public reload = (): Promise<any> => {
       try {
         const athis = this as unknown as IOptionalIndexed<PromiseFunc>;
         const fetchDataFunc = athis[conf.fetchDataFunc];
@@ -96,15 +105,12 @@ const LoadingHOC: ILoadingHOCFactory = (WrapperComponent, config = {}) => {
 
     private fetchData(promises: Promises = []) {
       const promise = promises instanceof Array ? Promise.all(promises) : promises;
-      return Promise.race([ promise, new Promise((_resolve, reject) => {
+      return Promise.race([promise, new Promise((_resolve, reject) => {
         const { timeout = 5000 } = conf;
         setTimeout(() => reject(new Error("请求超时")), timeout);
-      }) ]).then((ps: Promises) => ps, (fail: () => any) => new Promise((_r, j) => this.setState({
-          [$StateKey]: "fail",
-        }, () => j(fail))));
+      })]).then((ps: Promises) => ps, (fail: () => any) => new Promise((_r, j) => this.setState({
+        [$StateKey]: "fail",
+      }, () => j(fail))));
     }
-  }
-  return LoadingHOCComponent;
-};
-
-export default LoadingHOC;
+  };
+}
